@@ -4,145 +4,176 @@ using System.Text;
 
 namespace MonteCarloTreeSearch
 {
-    public class TickTackToeField : IState
+    public enum TickTackToeMarker
     {
-        int[,] board;
-        TickTackToe Game;
-        public int Turn { get; set; }
+        PlayerX,
+        PlayerO,
+        Draw,
+        None
+    }
 
-        public TickTackToeField(ref TickTackToe game, int playerTurn)
+    public class TickTackToe : IState
+    {
+        private TickTackToeMarker[,] Board;
+        private TickTackToeMarker Turn { get; set; }
+        public int MoveCount { get; }
+        private int GridDimension { get; set; }
+
+        public TickTackToe(int gridDimension)
         {
-            Game = game;
-            board = game.Field;
-            Turn = playerTurn;
+            GridDimension = gridDimension;
+            Board=new TickTackToeMarker[GridDimension,GridDimension];
+            for (int x = 0; x < GridDimension; x++)
+            {
+                for (int y = 0; y < GridDimension; y++)
+                {
+                    Board[x, y] = TickTackToeMarker.None;
+                }
+            }
+            Turn = TickTackToeMarker.PlayerX;
+            MoveCount = 0;
         }
 
-        public override ActionReturnValue TakeAction(int SimulationAction)
+        public TickTackToe(TickTackToeMarker[,] board, TickTackToeMarker turn, int moveCount, int gridDimension)
+        {
+            Board = board;
+            Turn = turn;
+            GridDimension = gridDimension;
+        }
+
+
+        private TickTackToeMarker Move(int x, int y)
+        {
+            if (Board[x,y] == TickTackToeMarker.None)
+            {
+                Board[x,y] = Turn;
+            }
+            
+            //check end conditions
+
+            //check col
+            for (int i = 0; i < GridDimension; i++)
+            {
+                if (Board[x,i] != Turn)
+                    break;
+                if (i == GridDimension - 1)
+                {
+                    //report win for s
+                    return Turn;
+                }
+            }
+
+            //check row
+            for (int i = 0; i < GridDimension; i++)
+            {
+                if (Board[i,y] != Turn)
+                    break;
+                if (i == GridDimension - 1)
+                {
+                    //report win for s
+                    return Turn;
+                }
+            }
+
+            //check diag
+            if (x == y)
+            {
+                //we're on a diagonal
+                for (int i = 0; i < GridDimension; i++)
+                {
+                    if (Board[i,i] != Turn)
+                        break;
+                    if (i == GridDimension - 1)
+                    {
+                        //report win for s
+                        return Turn;
+                    }
+                }
+            }
+
+            //check anti diag
+            if (x + y == GridDimension - 1)
+            {
+                for (int i = 0; i < GridDimension; i++)
+                {
+                    if (Board[i,(GridDimension - 1) - i] != Turn)
+                        break;
+                    if (i == GridDimension - 1)
+                    {
+                        //report win for s
+                        return Turn;
+                    }
+                }
+            }
+
+            //check draw
+            if ((MoveCount+1) == (Math.Pow(GridDimension, 2) - 1))
+            {
+                //report draw
+                return TickTackToeMarker.Draw;
+            }
+
+            //Report no one has won yet and there's no draw
+            return TickTackToeMarker.None;
+        }
+
+        public override ActionReturnValue TakeAction(int simulationAction)
         {
             ActionReturnValue toReturn = new ActionReturnValue();
-            int x = SimulationAction % Game.Field.GetLength(0);
-            int y = SimulationAction / Game.Field.GetLength(1);
-            Game.MakeMove(ref board, Turn, x, y);
-            if(Game.CheckWin(ref board)==Turn)
+            int x = simulationAction % Board.GetLength(0);
+            int y = simulationAction / Board.GetLength(1);
+            TickTackToeMarker resultOfMove = Move(x, y);
+            var newTurn = TickTackToeMarker.None;
+            if (Turn == TickTackToeMarker.PlayerX)
             {
-                toReturn.Done = true;
-                toReturn.NewState = new TickTackToeField(ref Game, -Turn);
-                toReturn.Value = 1;
-            }
-            else if(Game.CheckWin(ref board)==-Turn)
-            {
-                toReturn.Done = true;
-                toReturn.NewState = new TickTackToeField(ref Game, -Turn);
-                toReturn.Value = -1;
-            }
-            else if(!Game.IsPlayable(ref board))
-            {
-                toReturn.Done = true;
-                toReturn.NewState = new TickTackToeField(ref Game, -Turn);
-                toReturn.Value = 0;
+                newTurn = TickTackToeMarker.PlayerO;
             }
             else
             {
+                newTurn = TickTackToeMarker.PlayerX;
+            }
+            if (resultOfMove == TickTackToeMarker.None)
+            {
                 toReturn.Done = false;
-                toReturn.NewState = new TickTackToeField(ref Game, -Turn);
+                toReturn.NewState=new TickTackToe(Board,newTurn,MoveCount+1,GridDimension);
+                toReturn.Value = 0;
+            }
+            else if (resultOfMove == Turn)
+            {
+                toReturn.Done = true;
+                toReturn.NewState=new TickTackToe(Board, newTurn, MoveCount+1, GridDimension);
+                toReturn.Value = 1;
+            }
+            else // Draw
+            {
+                toReturn.Done = true;
+                toReturn.NewState=new TickTackToe(Board, newTurn, MoveCount+1, GridDimension);
                 toReturn.Value = 0;
             }
             return toReturn;
         }
-    }
 
-    public class TickTackToe
-    {
-        public static int TTT_EMPTY = 0;
-        public static int TTT_CROSS = 1;
-        public static int TTT_CIRCLE = -1;
-        public static int TTT_FIELDSIZE = 3;
-
-        public int[,] Field { get; set; }
-
-        public TickTackToe(ref int[,] __field)
+        public void PrettyPrint()
         {
-            Field = new int[TTT_FIELDSIZE, TTT_FIELDSIZE];
-            for (int i = 0; i < TTT_FIELDSIZE; i++)
-                for (int j = 0; j < TTT_FIELDSIZE; j++)
-                    Field[i, j] = TTT_EMPTY;
-            __field = Field;
-        }
-
-        void Print(ref int[,] __field)
-        {
-            for (int i = 0; i < TTT_FIELDSIZE; i++)
+            for (int y = 0; y < GridDimension; y++)
             {
-                for (int j = 0; j < TTT_FIELDSIZE; j++)
+                for (int x = 0; x < GridDimension; x++)
                 {
-                    if (j != 0)
-                        Console.Write("|");
-
-                    Console.Write(" " + __field[i,j] +" ");
+                    if (Board[x, y] == TickTackToeMarker.None)
+                    {
+                        Console.Write(" - ");
+                    }
+                    else if (Board[x, y] == TickTackToeMarker.PlayerO)
+                    {
+                        Console.Write(" O ");
+                    }
+                    else if (Board[x, y] == TickTackToeMarker.PlayerX)
+                    {
+                        Console.Write(" X ");
+                    }
                 }
-                if (i != TTT_FIELDSIZE - 1)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine("-----------");
-                }
-                else
-                {
-                    Console.WriteLine();
-                }
+                Console.WriteLine();
             }
-        }
-
-        public bool MakeMove(ref int[,] __field, int __who, int __wherex, int __wherey)
-        {
-            if (__wherex < 0 || __wherex >= TTT_FIELDSIZE)
-                return false;
-            if (__wherey < 0 || __wherey >= TTT_FIELDSIZE)
-                return false;
-
-            if (__field[__wherey,__wherex] != TTT_EMPTY)
-                return false;
-
-            __field[__wherey,__wherex] = __who;
-            return true;
-        }
-
-        public int CheckWin(ref int[,] __field )
-        {
-            /// vertical
-            for (int i = 0; i < TTT_FIELDSIZE; i++)
-            {
-                if (__field[0,i] == __field[1,i] && __field[1,i] == __field[2,i] && __field[1,i] != TTT_EMPTY)
-                    return __field[1,i];
-            }
-
-            /// horizontal
-            for (int i = 0; i < TTT_FIELDSIZE; i++)
-            {
-                if (__field[i,0] == __field[i,1] && __field[i,1] == __field[i,2] && __field[i,1] != TTT_EMPTY)
-                    return __field[i,1];
-            }
-
-            /// diagonal 
-            if (__field[0,0] == __field[1,1] && __field[1,1] == __field[2,2] && __field[1,1] != TTT_EMPTY)
-                return __field[1,1];
-
-            if (__field[0,2] == __field[1,1] && __field[1,1] == __field[2,0] && __field[1,1] != TTT_EMPTY)
-                return __field[1,1];
-
-            /// no one wins
-            return TTT_EMPTY;
-        }
-
-        public bool IsPlayable(ref int[,] __field )
-        {
-            if (CheckWin(ref __field)==1) return false;
-
-            for (int i = 0; i < TTT_FIELDSIZE; i++)
-                for (int j = 0; j < TTT_FIELDSIZE; j++)
-                    if (__field[i,j] == TTT_EMPTY)
-                        return true;
-
-            return false;
         }
     }
 }

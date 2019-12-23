@@ -8,7 +8,15 @@ namespace MonteCarloTreeSearch
     {
         public static void RunTests()
         {
-           
+            DoTickTacToeTest();
+        }
+
+        public static void DoTickTacToeTest()
+        {
+            TickTackToe ttt=new TickTackToe(3);
+            
         }
     }
+
+
 }
