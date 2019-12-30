@@ -27,8 +27,11 @@ namespace MonteCarloTreeSearch
 
         public static TValue GetValueOrNull<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
         {
-            TValue ret;
-            dictionary.TryGetValue(key, out ret);
+            var success = dictionary.TryGetValue(key, out TValue ret);
+            if(!success)
+            {
+                return default;
+            }
             return ret;
         }
     }
@@ -52,7 +55,7 @@ namespace MonteCarloTreeSearch
         {
             this.Terminal = terminal;
             this.Parent = parent;
-            this.Transition = parent == null ? default(T) : transition;
+            this.Transition = parent == null ? default : transition;
             this.Childs = new Dictionary<T, Node<T>>();
             this.Wins = new Dictionary<int, int>();
             if (parent != null)
@@ -68,7 +71,7 @@ namespace MonteCarloTreeSearch
         {
             this.Terminal = false;
             this.Parent = null;
-            this.Transition = default(T);
+            this.Transition = default;
             this.Childs = new Dictionary<T, Node<T>>();
             this.Wins = new Dictionary<int, int>();
             this.Simulations = child.Simulations;
@@ -208,7 +211,7 @@ namespace MonteCarloTreeSearch
          * @param transition The {@link Transition} to fetch the child {@link Node} from
          * @return
          */
-        public Node<T> getNode(T transition)
+        public Node<T> GetNode(T transition)
         {
             return Childs[transition];
         }

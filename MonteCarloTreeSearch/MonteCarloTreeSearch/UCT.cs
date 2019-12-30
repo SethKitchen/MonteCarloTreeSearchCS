@@ -16,7 +16,7 @@ namespace MonteCarloTreeSearch
         public override T SelectTransition(Node<T> node, int player)
         {
             double v = double.NegativeInfinity;
-            T best = default(T);
+            T best = default;
             foreach (T transition in PossibleTransitions)
             {
                 Node<T> n = node.GetChild(transition);

@@ -43,7 +43,7 @@ namespace MonteCarloTreeSearch
         /// </summary>
         public virtual void Reset()
         {
-            current = new Node<T>(null, default(T), false);
+            current = new Node<T>(null, default, false);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace MonteCarloTreeSearch
                 {
                     // no possible transition
                     // isOver MUST be true.
-                    return default(T);
+                    return default;
                 }
                 //JAVA TO C# CONVERTER WARNING: The original Java variable was marked 'final':
                 //ORIGINAL LINE: final int currentPlayer = getCurrentPlayer();
@@ -80,7 +80,7 @@ namespace MonteCarloTreeSearch
                     BackPropagation(expandedNode, winner);
                 } while (!stop);
                 // state is restored
-                T best = default(T);
+                T best = default;
                 double bestValue = double.NegativeInfinity;
                 // all possible transitions have been set on root node
                 // see expansion(N node)

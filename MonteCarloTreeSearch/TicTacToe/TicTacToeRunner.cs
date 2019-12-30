@@ -13,7 +13,7 @@ namespace TicTacToe
             // Change the thinking depth value > 0
         }
 
-        public static void Main(string[] args)
+        public static void Main()
         {
             SampleRunner<TicTacToeTransition> runner = new TicTacToeRunner();
             runner.Run();

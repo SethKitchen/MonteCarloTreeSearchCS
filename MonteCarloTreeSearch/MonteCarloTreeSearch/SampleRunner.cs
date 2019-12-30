@@ -12,22 +12,22 @@ namespace MonteCarloTreeSearch
     public abstract class SampleRunner<T> where T : ITransition
     {
 
-        public interface Listener<T> where T : ITransition
+        public interface IListener<T1> where T1 : ITransition
         {
-            void OnMove(MonteCarloTreeSearch<T> mcts, T transition, int turn);
-            void OnGameOver(MonteCarloTreeSearch<T> mcts);
-            void OnNoPossibleMove(MonteCarloTreeSearch<T> mcts);
+            void OnMove(MonteCarloTreeSearch<T1> mcts, T1 transition, int turn);
+            void OnGameOver(MonteCarloTreeSearch<T1> mcts);
+            void OnNoPossibleMove(MonteCarloTreeSearch<T1> mcts);
         }
 
-        private MonteCarloTreeSearch<T> mcts;
-        private Listener<T> listener;
+        private readonly MonteCarloTreeSearch<T> mcts;
+        private IListener<T> listener;
 
         public SampleRunner(MonteCarloTreeSearch<T> mcts)
         {
             this.mcts = mcts;
         }
 
-        public virtual void SetListener(Listener<T> listener)
+        public virtual void SetListener(IListener<T> listener)
         {
             this.listener = listener;
         }

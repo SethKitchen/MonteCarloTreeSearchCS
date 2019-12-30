@@ -10,7 +10,7 @@ namespace Connect4
             // Change the thinking depth value > 0
         }
 
-        public static void Main(string[] args)
+        public static void Main()
         {
             SampleRunner<Connect4Transition> runner = new Connect4Runner();
             runner.Run();
